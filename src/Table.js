@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { mergeClassName } from "./utils";
 import { Field } from "@filigrana/schema";
 import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
+import { SelectionContainer, useSelectable } from "./selection";
 
 export function Table(props) {
 
@@ -13,7 +14,7 @@ export function Table(props) {
         headingComponent,
         rowComponent,
         rowKey,
-        ...attr
+        ...parentProps
     } = props;
 
     let status;
@@ -49,8 +50,9 @@ export function Table(props) {
 
     const [resolvedObjects, setResolvedObjects] = useState(objects);
     const [errorMessage, setErrorMessage] = useState(null);
+    const resolving = resolvedObjects instanceof Promise;
 
-    if (resolvedObjects instanceof Promise) {
+    if (resolving) {
         objects
             .then(setResolvedObjects)
             .catch(error => {
@@ -61,6 +63,13 @@ export function Table(props) {
                     throw error;
                 }
             });
+    }
+
+    if (!rowKey) {
+        for (let field of schema.fields()) {
+            rowKey = (instance) => instance.getValue(field.name);
+            break;
+        }
     }
 
     if (errorMessage) {
@@ -74,13 +83,6 @@ export function Table(props) {
     else {
         const HeadingComponent = headingComponent || TableHeading;
         const RowComponent = rowComponent || TableRow;
-
-        if (!rowKey) {
-            for (let field of schema.fields()) {
-                rowKey = (instance) => instance.getValue(field.name);
-                break;
-            }
-        }
 
         status = 'loaded';
         content = (
@@ -105,12 +107,14 @@ export function Table(props) {
     }
 
     return (
-        <div
+        <SelectionContainer
             className={mergeClassName('Table', className)}
+            selectionItems={resolving ? [] : resolvedObjects}
+            selectionKey={rowKey}
             data-status={status}
-            {...attr}>
+            {...parentProps}>
             {content}
-        </div>
+        </SelectionContainer>
     );
 }
 
@@ -134,13 +138,17 @@ export function TableHeading(props) {
 export function TableRow(props) {
 
     const {className, schema, instance, ...attr} = props;
+    const [ref, isSelected] = useSelectable(instance);
 
     if (!schema) {
         throw new Error('TableRow expected a "schema" property');
     }
 
     return (
-        <tr className={mergeClassName('TableRow', className)} {...attr}>
+        <tr
+            ref={ref}
+            className={mergeClassName('TableRow', className)}
+            {...attr}>
             {Array.from(schema.fields(), field => {
 
                 const typeNames = [];
