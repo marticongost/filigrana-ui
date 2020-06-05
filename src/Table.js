@@ -3,6 +3,7 @@ import { mergeClassName } from "./utils";
 import { Field } from "@filigrana/schema";
 import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
 import { SelectionContainer, useSelectable } from "./selection";
+import { LoadingMessage } from "./LoadingMessage";
 
 export function Table(props) {
 
@@ -78,12 +79,9 @@ export function Table(props) {
     }
     else if (resolvedObjects instanceof Promise) {
         status = 'loading';
-        content = <div className="loading-message">Cargando...</div>;
+        content = <LoadingMessage/>;
     }
     else {
-        const HeadingComponent = headingComponent || TableHeading;
-        const RowComponent = rowComponent || TableRow;
-
         status = 'loaded';
         content = (
             <table>

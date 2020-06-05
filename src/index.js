@@ -7,5 +7,6 @@ export {
     useSelectable,
 } from "./selection";
 export { Table, TableHeading, TableRow } from "./Table";
+export { LoadingMessage } from './LoadingMessage';
 export { SVG } from "./SVG";
 export * from './utils';
