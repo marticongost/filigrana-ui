@@ -131,14 +131,15 @@ export function TableRow(props) {
                 }
 
                 let cellContent;
-                const value = props.instance[field.name];
+                const value = instance[field.name];
 
                 if (field.display) {
                     const Display = field.display;
                     cellContent = (
                         <Display
-                            instance={props.instance}
-                            field={field} value={value} />
+                            instance={instance}
+                            field={field}
+                            value={value} />
                     );
                 }
                 else {
