@@ -130,6 +130,13 @@ export class Selection {
         }
     }
 
+    get firstSelectedItem() {
+        for (let item of this) {
+            return item;
+        }
+        return null;
+    }
+
     [REGISTER_SELECTABLE](value, stateSetter) {
         const key = this[GET_KEY](value);
         this[NODES][key].stateSetter = stateSetter;
