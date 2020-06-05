@@ -143,7 +143,7 @@ export function TableRow(props) {
                     );
                 }
                 else {
-                    cellContent = props.instance.getValue(field.name);
+                    cellContent = instance.getValueLabel(field.name);
                 }
 
                 return (
