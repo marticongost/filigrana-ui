@@ -44,7 +44,8 @@ export function ToolbarButton(props) {
     function handleClick() {
         let result = action.execute(context);
         if (result instanceof Promise) {
-            result.then(() => setWorking(false));
+            setWorking(true);
+            result.finally(() => setWorking(false));
         }
     }
 
@@ -129,8 +130,9 @@ export class Action {
 
     execute(context) {
         if (this[CALLBACK]) {
-            this[CALLBACK](context);
+            return this[CALLBACK](context);
         }
+        return undefined;
     }
 }
 
