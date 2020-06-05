@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import Enum from "@filigrana/enum";
-import { mergeClassName } from "./utils";
+import { ParameterSet } from "./utils";
 
 export const SelectionContext = createContext(null);
 
@@ -352,21 +352,31 @@ export class Selection {
 
 export function SelectionContainer(props) {
 
-    const {
-        selectionItems,
-        selectionKey,
-        selectionType,
-        selectionBehavior,
-        children,
-        className,
-        ...attr} = props;
+    const parameters = new ParameterSet(props, 'flg-SelectionContainer');
+    const selectionItems = parameters.pop('selectionItems', null);
+    const selectionKey = parameters.pop('selectionKey', null);
+    const selectionType = parameters.pop('selectionType', null);
+    const selectionBehavior = parameters.pop('selectionBehavior', null);
+    const children = parameters.pop('children', null);
 
-    const selection = new Selection({
-        items: selectionItems,
-        getKey: selectionKey,
-        type: selectionType,
-        behavior: selectionBehavior
-    });
+    const onItemSelected = parameters.pop('onItemSelected', null);
+    const onItemDeselected = parameters.pop('onItemDeselected', null);
+    const onSelectionChanged = parameters.pop('onSelectionChanged', null);
+    const onSelectionActivated = parameters.pop('onSelectionActivated', null);
+
+    let selection = useContext(SelectionContext);
+    if (!selection) {
+        selection = new Selection({
+            items: selectionItems,
+            getKey: selectionKey,
+            type: selectionType,
+            behavior: selectionBehavior,
+            onItemSelected: onItemSelected,
+            onItemDeselected: onItemDeselected,
+            onChanged: onSelectionChanged,
+            onActivated: onSelectionActivated
+        });
+    }
 
     function handleKeyDown(event) {
 
@@ -413,10 +423,9 @@ export function SelectionContainer(props) {
 
     return <SelectionContext.Provider value={selection}>
         <div
-            className={mergeClassName('flg-SelectionContainer', className)}
             onKeyDown={handleKeyDown}
             tabIndex="-1"
-            {...attr}>
+            {...parameters.remaining}>
             {children}
         </div>
     </SelectionContext.Provider>;

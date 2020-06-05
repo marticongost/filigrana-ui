@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { mergeClassName } from "./utils";
+import { ParameterSet } from "./utils";
 import { Field } from "@filigrana/schema";
 import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
 import { SelectionContainer, useSelectable } from "./selection";
@@ -7,27 +7,12 @@ import { LoadingMessage } from "./LoadingMessage";
 
 export function Table(props) {
 
-    let {
-        className,
-        model,
-        schema,
-        objects,
-        headingComponent,
-        rowComponent,
-        rowKey,
-        ...parentProps
-    } = props;
-
-    let status;
-    let content;
-
-    if (!model) {
-        throw new Error('Table expected a "model" property');
-    }
-
-    if (!schema) {
-        schema = model.schema;
-    }
+    const parameters = new ParameterSet(props, 'flg-Table');
+    const model = parameters.pop('model');
+    const schema = parameters.pop('schema', null) || model.schema;
+    const HeadingComponent = parameters.pop('headingComponent', TableHeading);
+    const RowComponent = parameters.pop('rowComponent', TableRow);
+    let rowKey = parameters.pop('rowKey', null);
 
     if (!schema.hasFields()) {
         throw new Error(
@@ -35,16 +20,7 @@ export function Table(props) {
         );
     }
 
-    if (!objects) {
-        objects = model.objects;
-    }
-
-    if (!objects) {
-        throw new Error(
-            'Table expected a "data" property or a model with an object store'
-        );
-    }
-
+    let objects = parameters.pop('objects', model.objects);
     if (objects instanceof ObjectStore) {
         objects = objects.list();
     }
@@ -72,6 +48,8 @@ export function Table(props) {
             break;
         }
     }
+
+    let content;
 
     if (errorMessage) {
         status = 'error';
@@ -106,11 +84,10 @@ export function Table(props) {
 
     return (
         <SelectionContainer
-            className={mergeClassName('Table', className)}
             selectionItems={resolving ? [] : resolvedObjects}
             selectionKey={rowKey}
             data-status={status}
-            {...parentProps}>
+            {...parameters.remaining}>
             {content}
         </SelectionContainer>
     );
@@ -118,16 +95,13 @@ export function Table(props) {
 
 export function TableHeading(props) {
 
-    const {className, field, ...attr} = props;
-
-    if (!field) {
-        throw new Error('TableHeading expected a "field" property');
-    }
+    const parameters = new ParameterSet(props, 'flg-TableHeading');
+    const field = parameters.pop('field');
 
     return (
-        <th className={mergeClassName('TableHeading', className)} {...attr}>
+        <th {...parameters.remaining}>
             <div className="header-content">
-                {props.field.label}
+                {field.label}
             </div>
         </th>
     );
@@ -135,7 +109,10 @@ export function TableHeading(props) {
 
 export function TableRow(props) {
 
-    const {className, schema, instance, ...attr} = props;
+    const parameters = new ParameterSet(props, 'flg-TableRow');
+    const schema = parameters.pop('schema');
+    const instance = parameters.pop('instance');
+
     const [ref, isSelected] = useSelectable(instance);
 
     if (!schema) {
@@ -143,10 +120,7 @@ export function TableRow(props) {
     }
 
     return (
-        <tr
-            ref={ref}
-            className={mergeClassName('TableRow', className)}
-            {...attr}>
+        <tr ref={ref} {...parameters.remaining}>
             {Array.from(schema.fields(), field => {
 
                 const typeNames = [];
@@ -161,7 +135,11 @@ export function TableRow(props) {
 
                 if (field.display) {
                     const Display = field.display;
-                    cellContent = <Display instance={props.instance} field={field} value={value} />;
+                    cellContent = (
+                        <Display
+                            instance={props.instance}
+                            field={field} value={value} />
+                    );
                 }
                 else {
                     cellContent = props.instance.getValue(field.name);
