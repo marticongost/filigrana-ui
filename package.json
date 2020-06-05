@@ -22,7 +22,8 @@
   "homepage": "https://github.com/marticongost/filigrana-ui#readme",
   "dependencies": {
     "react": "^16.13.0",
-    "@filigrana/ui": "^1.0.0"
+    "@filigrana/enum": "^0.1.0",
+    "@filigrana/schema": "^0.1.0"
   },
   "devDependencies": {}
 }
