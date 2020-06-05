@@ -162,12 +162,12 @@ export class Selection {
 
         if (selected) {
             if (this.onItemSelected) {
-                this.onItemSelected(node.item);
+                this.onItemSelected(this, node.item);
             }
         }
         else {
             if (this.onItemDeselected) {
-                this.onItemDeselected(node.item);
+                this.onItemDeselected(this, node.item);
             }
         }
     }
@@ -189,7 +189,7 @@ export class Selection {
         this[RANGE_START] = this[RANGE_END] = node;
 
         if (this.onChanged) {
-            this.onChanged();
+            this.onChanged(this);
         }
     }
 
@@ -263,7 +263,7 @@ export class Selection {
         this[RANGE_END] = last;
 
         if (this.onChanged) {
-            this.onChanged();
+            this.onChanged(this);
         }
     }
 
@@ -294,7 +294,7 @@ export class Selection {
                     this[SET_SELECTED](this[RANGE_END], false);
                     this[RANGE_END] = prev;
                     if (this.onChanged) {
-                        this.onChanged();
+                        this.onChanged(this);
                     }
                 }
                 // Extending an upwards selection
@@ -302,7 +302,7 @@ export class Selection {
                     this[RANGE_END] = prev;
                     this[SET_SELECTED](prev, true);
                     if (this.onChanged) {
-                        this.onChanged();
+                        this.onChanged(this);
                     }
                 }
             }
@@ -321,7 +321,7 @@ export class Selection {
                     this[SET_SELECTED](this[RANGE_END], false);
                     this[RANGE_END] = next;
                     if (this.onChanged) {
-                        this.onChanged();
+                        this.onChanged(this);
                     }
                 }
                 // Extending a downwards selection
@@ -329,7 +329,7 @@ export class Selection {
                     this[RANGE_END] = next;
                     this[SET_SELECTED](next, true);
                     if (this.onChanged) {
-                        this.onChanged();
+                        this.onChanged(this);
                     }
                 }
             }
