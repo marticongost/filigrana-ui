@@ -126,7 +126,7 @@ export class Selection {
 
     *[Symbol.iterator]() {
         for (let key of this[SELECTED_KEYS]) {
-            return this[NODES][key].item;
+            yield this[NODES][key].item;
         }
     }
 
