@@ -107,6 +107,16 @@ export class ParameterSet {
         return value;
     }
 
+    appendClassName(name) {
+        let className = this[VALUES].className;
+        if (className) {
+            this[VALUES].className = `${className} ${name}`;
+        }
+        else {
+            this[VALUES].className = name;
+        }
+    }
+
     prependClassName(baseName) {
         let className = this[VALUES].className;
         if (baseName && className) {
