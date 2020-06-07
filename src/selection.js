@@ -137,8 +137,14 @@ export class Selection {
         return null;
     }
 
-    [REGISTER_SELECTABLE](value, stateSetter) {
+    [REGISTER_SELECTABLE](value, isSelected, stateSetter) {
         const key = this[GET_KEY](value);
+        if (isSelected) {
+            this[SELECTED_KEYS].add(key);
+        }
+        else {
+            this[SELECTED_KEYS].delete(key);
+        }
         this[NODES][key].stateSetter = stateSetter;
     }
 
@@ -437,7 +443,7 @@ export function useSelectable(value) {
 
     const ref = useRef();
     const [isSelected, setSelected] = useState(selection.isSelected(value));
-    selection[REGISTER_SELECTABLE](value, setSelected);
+    selection[REGISTER_SELECTABLE](value, isSelected, setSelected);
 
     function handleClick(event) {
         if (selection.type == SelectionType.SINGLE) {
