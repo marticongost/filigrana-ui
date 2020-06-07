@@ -55,7 +55,6 @@ export function useObjectSet(source, options = null) {
         }
 
         if (!state.filteredObjects || searchChanged) {
-            console.log('Filter');
             state.filteredObjects = resolvedObjects.filter(
                 object => state.search(object.getSearchableText())
             );
