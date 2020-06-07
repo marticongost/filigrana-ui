@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ParameterSet } from "./utils";
-import { Field } from "@filigrana/schema";
+import { Field, prepareSearch } from "@filigrana/schema";
 import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
@@ -12,6 +12,7 @@ export function Table(props) {
     const schema = parameters.pop('schema', null) || model.schema;
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
+    const searchQuery = parameters.pop('searchQuery', '');
     let rowKey = parameters.pop('rowKey', null);
 
     if (!schema.hasFields()) {
@@ -28,6 +29,7 @@ export function Table(props) {
     const [resolvedObjects, setResolvedObjects] = useState(objects);
     const [errorMessage, setErrorMessage] = useState(null);
     const resolving = resolvedObjects instanceof Promise;
+    let filteredObjects = resolvedObjects;
 
     if (resolving) {
         objects
@@ -40,6 +42,12 @@ export function Table(props) {
                     throw error;
                 }
             });
+    }
+    else if (searchQuery) {
+        const search = prepareSearch(searchQuery);
+        filteredObjects = resolvedObjects.filter(
+            object => search(object.getSearchableText())
+        );
     }
 
     if (!rowKey) {
@@ -55,7 +63,7 @@ export function Table(props) {
         status = 'error';
         content = <div className="error-message">{errorMessage}</div>;
     }
-    else if (resolvedObjects instanceof Promise) {
+    else if (resolving) {
         status = 'loading';
         content = <LoadingMessage/>;
     }
@@ -71,7 +79,7 @@ export function Table(props) {
                     </tr>
                 </thead>
                 <tbody>
-                    {resolvedObjects.map(instance =>
+                    {filteredObjects.map(instance =>
                         <RowComponent
                             key={rowKey(instance)}
                             schema={schema}
@@ -84,7 +92,7 @@ export function Table(props) {
 
     return (
         <SelectionContainer
-            selectionItems={resolving ? [] : resolvedObjects}
+            selectionItems={resolving ? [] : filteredObjects}
             selectionKey={rowKey}
             data-status={status}
             {...parameters.remaining}>
