@@ -1,3 +1,71 @@
+import { useState, useRef, useEffect } from "react";
+import { prepareSearch } from "@filigrana/schema";
+import { ObjectStore } from "@filigrana/schema";
+
+export function useObjectSet(source, options = null) {
+
+    const searchQuery = options && options.searchQuery || '';
+    const ref = useRef();
+
+    if (!ref.current || source !== ref.current.source) {
+        ref.current = {
+            source,
+            searchQuery,
+            resolvedObjects: source instanceof Array ? resolvedObjects : null
+        };
+    }
+
+    const state = ref.current;
+    const [resolvedObjects, setResolvedObjects] = useState(state.resolvedObjects);
+
+    let mounted = true;
+
+    useEffect(
+        () => (() => mounted = false),
+        []
+    );
+
+    if (!resolvedObjects) {
+
+        if (!state.promise) {
+            if (source instanceof ObjectStore) {
+                state.promise = source.list();
+            }
+            else {
+                state.promise = source;
+            }
+        }
+
+        state.promise.then(
+            results => {
+                if (mounted) {
+                    setResolvedObjects(results);
+                }
+            }
+        );
+        return null;
+    }
+
+    if (searchQuery) {
+        const searchChanged = searchQuery != state.searchQuery;
+
+        if (searchChanged) {
+            state.searchQuery = searchQuery;
+            state.search = prepareSearch(searchQuery);
+        }
+
+        if (!state.filteredObjects || searchChanged) {
+            console.log('Filter');
+            state.filteredObjects = resolvedObjects.filter(
+                object => state.search(object.getSearchableText())
+            );
+        }
+
+        return state.filteredObjects;
+    }
+
+    return resolvedObjects;
+}
 
 export function mergeClassName(className, extraClassName) {
     if (extraClassName) {
