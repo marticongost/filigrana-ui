@@ -1,6 +1,6 @@
 {
   "name": "@filigrana/ui",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "UI components for Filigrana, a schema driven, React based UI toolkit",
   "main": "src/index.js",
   "scripts": {},
