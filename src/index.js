@@ -12,4 +12,5 @@ export { SVG } from "./SVG";
 export { Toolbar, ToolbarButton, Action, ActionStatus, ActionAnimation } from "./Toolbar";
 export { NotificationsContainer, useNotifications } from "./notifications";
 export { defineResourceRepository, resourceURL } from "./resources";
+export { SearchBox } from "./SearchBox";
 export * from './utils';
