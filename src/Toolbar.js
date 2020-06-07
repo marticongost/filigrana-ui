@@ -49,6 +49,11 @@ export function ToolbarButton(props) {
         }
     }
 
+    if (working) {
+        attr['data-animation'] = action.animation.name;
+        parameters.appendClassName('flg-working');
+    }
+
     return (
         <button
             data-action={action.id}
@@ -63,6 +68,7 @@ export function ToolbarButton(props) {
 
 const ID = Symbol('ID');
 const LABEL = Symbol('LABEL');
+const ANIMATION = Symbol('ANIMATION');
 const MIN = Symbol('MIN');
 const MAX = Symbol('MAX');
 const CALLBACK = Symbol('CALLBACK');
@@ -74,6 +80,7 @@ export class Action {
 
         this[ID] = parameters.id;
         this[LABEL] = parameters.label;
+        this[ANIMATION] = parameters.animation || ActionAnimation.PULSE;
         this[MIN] = parameters.min;
         this[MAX] = parameters.max;
         this[CALLBACK] = parameters.callback;
@@ -89,6 +96,10 @@ export class Action {
 
     get label() {
         return this[LABEL];
+    }
+
+    get animation() {
+        return this[ANIMATION];
     }
 
     get min() {
@@ -133,6 +144,23 @@ export class Action {
             return this[CALLBACK](context);
         }
         return undefined;
+    }
+}
+
+export class ActionAnimation extends Enum {
+
+    /**
+     * Use a pulsing animation.
+     */
+    static get PULSE() {
+        return this._option('PULSE');
+    }
+
+    /**
+     * Use a 360º rotation animation.
+     */
+    static get ROTATE() {
+        return this._option('ROTATE');
     }
 }
 
