@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { ParameterSet } from "./utils";
-import { Field, prepareSearch } from "@filigrana/schema";
-import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
+import { Field } from "@filigrana/schema";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
+import { useObjectSet } from "./utils";
 
 export function Table(props) {
 
@@ -13,7 +13,7 @@ export function Table(props) {
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
     const searchQuery = parameters.pop('searchQuery', '');
-    let rowKey = parameters.pop('rowKey', null);
+    const source = parameters.pop('objects', model.objects);
 
     if (!schema.hasFields()) {
         throw new Error(
@@ -21,35 +21,7 @@ export function Table(props) {
         );
     }
 
-    let objects = parameters.pop('objects', model.objects);
-    if (objects instanceof ObjectStore) {
-        objects = useMemo(() => objects.list(), [objects]);
-    }
-
-    const [resolvedObjects, setResolvedObjects] = useState(objects);
-    const [errorMessage, setErrorMessage] = useState(null);
-    const resolving = resolvedObjects instanceof Promise;
-    let filteredObjects = resolvedObjects;
-
-    if (resolving) {
-        objects
-            .then(setResolvedObjects)
-            .catch(error => {
-                if (error instanceof ObjectStoreError) {
-                    setErrorMessage(error.toString());
-                }
-                else {
-                    throw error;
-                }
-            });
-    }
-    else if (searchQuery) {
-        const search = prepareSearch(searchQuery);
-        filteredObjects = resolvedObjects.filter(
-            object => search(object.getSearchableText())
-        );
-    }
-
+    let rowKey = parameters.pop('rowKey', null);
     if (!rowKey) {
         for (let field of schema.fields()) {
             rowKey = (instance) => instance.getValue(field.name);
@@ -57,15 +29,21 @@ export function Table(props) {
         }
     }
 
+    const objects = useObjectSet(source, {searchQuery});
     let content;
 
-    if (errorMessage) {
-        status = 'error';
-        content = <div className="error-message">{errorMessage}</div>;
-    }
-    else if (resolving) {
+    if (!objects) {
         status = 'loading';
         content = <LoadingMessage/>;
+    }
+    else if (objects instanceof Error) {
+        if (error instanceof ObjectStoreError) {
+            status = 'error';
+            content = <div className="error-message">{error.toString()}</div>;
+        }
+        else {
+            throw error;
+        }
     }
     else {
         status = 'loaded';
@@ -79,7 +57,7 @@ export function Table(props) {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredObjects.map(instance =>
+                    {objects.map(instance =>
                         <RowComponent
                             key={rowKey(instance)}
                             schema={schema}
@@ -92,7 +70,7 @@ export function Table(props) {
 
     return (
         <SelectionContainer
-            selectionItems={resolving ? [] : filteredObjects}
+            selectionItems={objects instanceof Array ? objects : []}
             selectionKey={rowKey}
             data-status={status}
             {...parameters.remaining}>
