@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { ParameterSet } from "./utils";
 import { Field, prepareSearch } from "@filigrana/schema";
 import { ObjectStore, ObjectStoreError } from "@filigrana/schema";
@@ -23,7 +23,7 @@ export function Table(props) {
 
     let objects = parameters.pop('objects', model.objects);
     if (objects instanceof ObjectStore) {
-        objects = objects.list();
+        objects = useMemo(() => objects.list(), [objects]);
     }
 
     const [resolvedObjects, setResolvedObjects] = useState(objects);
