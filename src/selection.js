@@ -137,14 +137,8 @@ export class Selection {
         return null;
     }
 
-    [REGISTER_SELECTABLE](value, isSelected, stateSetter) {
+    [REGISTER_SELECTABLE](value, stateSetter) {
         const key = this[GET_KEY](value);
-        if (isSelected) {
-            this[SELECTED_KEYS].add(key);
-        }
-        else {
-            this[SELECTED_KEYS].delete(key);
-        }
         this[NODES][key].stateSetter = stateSetter;
     }
 
@@ -370,19 +364,33 @@ export function SelectionContainer(props) {
     const onSelectionChanged = parameters.pop('onSelectionChanged', null);
     const onSelectionActivated = parameters.pop('onSelectionActivated', null);
 
-    let selection = useContext(SelectionContext);
-    if (!selection) {
-        selection = new Selection({
-            items: selectionItems,
-            getKey: selectionKey,
-            type: selectionType,
-            behavior: selectionBehavior,
-            onItemSelected: onItemSelected,
-            onItemDeselected: onItemDeselected,
-            onChanged: onSelectionChanged,
-            onActivated: onSelectionActivated
-        });
+    const ref = useRef();
+
+    if (!ref.current || ref.current.selectionItems !== selectionItems) {
+
+        // The selection is replaced, without preserving previously selected
+        // items
+        if (ref.current) {
+            const prevSelection = ref.current.selection;
+            setTimeout(() => prevSelection.clear(), 1);
+        }
+
+        ref.current = {
+            selectionItems,
+            selection: new Selection({
+                items: selectionItems,
+                getKey: selectionKey,
+                type: selectionType,
+                behavior: selectionBehavior,
+                onItemSelected: onItemSelected,
+                onItemDeselected: onItemDeselected,
+                onChanged: onSelectionChanged,
+                onActivated: onSelectionActivated
+            })
+        };
     }
+
+    const selection = ref.current.selection;
 
     function handleKeyDown(event) {
 
@@ -427,7 +435,7 @@ export function SelectionContainer(props) {
         }
     }
 
-    return <SelectionContext.Provider value={selection}>
+    return <SelectionContext.Provider value={ref}>
         <div
             onKeyDown={handleKeyDown}
             tabIndex="-1"
@@ -439,13 +447,16 @@ export function SelectionContainer(props) {
 
 export function useSelectable(value) {
 
-    const selection = useContext(SelectionContext);
+    const selectionRef = useContext(SelectionContext);
 
     const ref = useRef();
-    const [isSelected, setSelected] = useState(selection.isSelected(value));
-    selection[REGISTER_SELECTABLE](value, isSelected, setSelected);
+    const [isSelected, setSelected] = useState(
+        selectionRef.current.selection.isSelected(value))
+    ;
+    selectionRef.current.selection[REGISTER_SELECTABLE](value, setSelected);
 
     function handleClick(event) {
+        const selection = selectionRef.current.selection;
         if (selection.type == SelectionType.SINGLE) {
             if (selection.behavior == SelectionBehavior.TOGGLE) {
                 selection.toggle(value);
@@ -478,7 +489,7 @@ export function useSelectable(value) {
     }
 
     function handleDoubleClick(event) {
-        selection.activate(value);
+        selectionRef.current.activate(value);
     }
 
     const selectedClassName = 'flg-selected';
