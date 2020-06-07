@@ -23,7 +23,7 @@
   "dependencies": {
     "react": "^16.13.0",
     "@filigrana/enum": "~0.1.0",
-    "@filigrana/schema": "~0.2.0"
+    "@filigrana/schema": "~0.3.0"
   },
   "devDependencies": {}
 }
