@@ -2,7 +2,7 @@
 const repositories = {};
 
 export function defineResourceRepository(repositoryName, rootPath) {
-    if (rootPath.charAt(repositoryName.length - 1) != '/') {
+    if (rootPath.charAt(rootPath.length - 1) != '/') {
         rootPath += '/';
     }
     repositories[repositoryName] = rootPath;
@@ -12,6 +12,9 @@ export function resourceURL(repositoryName, path) {
     let url = repositories[repositoryName];
     if (!url) {
         throw new InvalidRepositoryError(repositoryName);
+    }
+    if (path.charAt(0) == '/') {
+        path = path.substr(1);
     }
     return url + path;
 }
