@@ -85,7 +85,7 @@ export function TableHeading(props) {
     const field = parameters.pop('field');
 
     return (
-        <th {...parameters.remaining}>
+        <th {...parameters.remaining} data-column={field.name}>
             <div className="header-content">
                 {field.label}
             </div>
