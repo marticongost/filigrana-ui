@@ -5,12 +5,14 @@ import { ObjectStore } from "@filigrana/schema";
 export function useObjectSet(source, options = null) {
 
     const searchQuery = options && options.searchQuery || '';
+    const order = options && options.order || null;
     const ref = useRef();
 
     if (!ref.current || source !== ref.current.source) {
         ref.current = {
             source,
             searchQuery,
+            order,
             resolvedObjects: source instanceof Array ? resolvedObjects : null
         };
     }
@@ -46,6 +48,8 @@ export function useObjectSet(source, options = null) {
         return null;
     }
 
+    let objectSet = resolvedObjects;
+
     if (searchQuery) {
         const searchChanged = searchQuery != state.searchQuery;
 
@@ -58,12 +62,51 @@ export function useObjectSet(source, options = null) {
             state.filteredObjects = resolvedObjects.filter(
                 object => state.search(object.getSearchableText())
             );
+            state.sortedObjects = null;
         }
 
-        return state.filteredObjects;
+        objectSet = state.filteredObjects;
     }
 
-    return resolvedObjects;
+    if (order) {
+        const orderChanged = order != state.order;
+
+        if (orderChanged) {
+            state.order = order;
+        }
+
+        if (!state.sortedObjects || orderChanged) {
+            state.sortedObjects = objectSet;
+
+            let memberName;
+            let direction;
+
+            if (order.charAt(0) == '-') {
+                direction = -1;
+                memberName = order.substr(1);
+            }
+            else {
+                direction = 1;
+                memberName = order;
+            }
+
+            state.sortedObjects.sort((object1, object2) => {
+                const value1 = object1.getValue(memberName);
+                const value2 = object2.getValue(memberName);
+                if (value1 > value2) {
+                    return direction;
+                }
+                else if (value1 < value2) {
+                    return -direction;
+                }
+                return 0;
+            });
+        }
+
+        objectSet = state.sortedObjects;
+    }
+
+    return objectSet;
 }
 
 export function mergeClassName(className, extraClassName) {

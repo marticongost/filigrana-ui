@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { ParameterSet } from "./utils";
 import { Field } from "@filigrana/schema";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
+import { SVG } from "./SVG";
 import { useObjectSet } from "./utils";
+import { resourceURL } from "./resources";
 
 export function Table(props) {
 
@@ -13,6 +15,8 @@ export function Table(props) {
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
     const searchQuery = parameters.pop('searchQuery', '');
+    const sortable = parameters.pop('sortable', true);
+    const initialOrder = parameters.pop('order', null);
     const source = parameters.pop('objects', model.objects);
 
     if (!schema.hasFields()) {
@@ -29,7 +33,9 @@ export function Table(props) {
         }
     }
 
-    const objects = useObjectSet(source, {searchQuery});
+    const [order, setOrder] = useState(initialOrder);
+
+    const objects = useObjectSet(source, {searchQuery, order});
     let content;
 
     if (!objects) {
@@ -51,9 +57,25 @@ export function Table(props) {
             <table>
                 <thead>
                     <tr>
-                        {Array.from(schema.fields(), field =>
-                            <HeadingComponent key={field.name} field={field}/>
-                        )}
+                        {Array.from(schema.fields(), field => {
+                            let sortDirection = 0;
+                            if (order) {
+                                if (field.name == order) {
+                                    sortDirection = 'asc';
+                                }
+                                else if ('-' + field.name == order) {
+                                    sortDirection = 'desc';
+                                }
+                            }
+                            return (
+                                <HeadingComponent
+                                    key={field.name}
+                                    field={field}
+                                    sortable={sortable}
+                                    sortDirection={sortDirection}
+                                    onSortingRequested={setOrder}/>
+                            );
+                        })}
                     </tr>
                 </thead>
                 <tbody>
@@ -83,11 +105,48 @@ export function TableHeading(props) {
 
     const parameters = new ParameterSet(props, 'flg-TableHeading');
     const field = parameters.pop('field');
+    const sortable = parameters.pop('sortable', true);
+    const sortDirection = parameters.pop('sortDirection', null);
+    const onSortingRequested = parameters.pop('onSortingRequested', null);
+
+    const extraParameters = {};
+
+    if (sortDirection) {
+        extraParameters['data-sorted'] = sortDirection;
+    }
+
+    if (sortable) {
+        parameters.appendClassName('sortable');
+    }
+
+    let sortDirectionIcon;
+    if (sortDirection) {
+        const iconURL = resourceURL('@filigrana/ui', `icons/${sortDirection}.svg`);
+        sortDirectionIcon = (
+            <SVG className="column-sort-direction" src={iconURL}/>
+        );
+    }
+    else {
+        sortDirectionIcon = null;
+    }
+
+    function handleClicked(e) {
+        if (sortable && onSortingRequested) {
+            onSortingRequested(
+                (sortDirection == 'asc' ? '-' : '') + field.name
+            );
+        }
+    }
 
     return (
-        <th {...parameters.remaining} data-column={field.name}>
+        <th
+            data-column={field.name}
+            {...parameters.remaining}
+            {...extraParameters}
+            onClick={handleClicked}>
             <div className="header-content">
-                {field.label}
+                <span className="column-label">{field.label}</span>
+                {sortDirectionIcon}
             </div>
         </th>
     );
