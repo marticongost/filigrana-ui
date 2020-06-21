@@ -1,28 +1,32 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
 export function SVG(props) {
 
     const {src, ...attr} = props;
-    const [svgDocument, setSVGDocument] = useState(null);
-    const ref = useRef();
+    const [svgContent, setSVGContent] = useState(null);
+    let mounted;
 
     useEffect(
         () => {
-            if (svgDocument) {
-                ref.current.appendChild(svgDocument.rootElement);
-            }
+            mounted = true;
+            fetch(src)
+                .then(response => response.text())
+                .then(text => {
+                    if (mounted) {
+                        setSVGContent(text);
+                    }
+                });
+
+            return () => mounted = false;
         },
-        [src, !svgDocument]
+        [src]
     );
 
-    if (!svgDocument) {
-        fetch(src)
-            .then(response => response.text())
-            .then(text => (
-                new window.DOMParser()).parseFromString(text, "text/xml")
-                )
-                .then(setSVGDocument);
+    let svg = null;
+
+    if (svgContent) {
+        svg = {__html: svgContent};
     }
 
-    return <div ref={ref} className="flg-SVG" {...attr}></div>;
+    return <div className="flg-SVG" {...attr} dangerouslySetInnerHTML={svg}/>;
 }
