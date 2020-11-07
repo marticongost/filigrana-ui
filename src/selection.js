@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from "react";
 import Enum from "@filigrana/enum";
-import { ParameterSet } from "./utils";
+import { ParameterSet, useEventListener } from "./utils";
 
 export const SelectionContext = createContext(null);
 
@@ -368,6 +368,11 @@ export function SelectionContainer(props) {
     const onSelectionActivated = parameters.pop('onSelectionActivated', null);
 
     const ref = useRef();
+    const element = useRef();
+
+    useEventListener(element, 'selectstart', function handleSelectStart(e) {
+        e.preventDefault();
+    });
 
     if (!ref.current || ref.current.selectionItems !== selectionItems) {
 
@@ -440,6 +445,7 @@ export function SelectionContainer(props) {
 
     return <SelectionContext.Provider value={ref}>
         <div
+            ref={element}
             onKeyDown={handleKeyDown}
             tabIndex="-1"
             {...parameters.remaining}>
