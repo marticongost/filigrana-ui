@@ -2,6 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import { prepareSearch } from "@filigrana/schema";
 import { ObjectStore } from "@filigrana/schema";
 
+export function useEventListener(ref, eventName, handler) {
+    useEffect(() => {
+        ref.current.addEventListener(eventName, handler);
+        return () => {
+            ref.current.removeEventListener(eventName, handler);
+        }
+    }, []);
+}
+
 export function useObjectSet(source, options = null) {
 
     const searchQuery = options && options.searchQuery || '';
