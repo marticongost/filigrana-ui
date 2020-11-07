@@ -215,16 +215,19 @@ export class Selection {
         this[RANGE_END] = end;
 
         let direction;
-        if (end.index > start.index) {
+        if (end.index > node.index) {
             direction = 'nextNode';
         }
-        else if (end.index < start.index) {
+        else if (end.index < node.index) {
             direction = 'previousNode';
         }
 
-        while (node && node != end) {
+        while (node) {
             if (!this[SELECTED_KEYS].has(node.key)) {
-                this[SET_SELETED](node);
+                this[SET_SELECTED](node, true);
+            }
+            if (node == end) {
+                break;
             }
             node = node[direction];
         }
