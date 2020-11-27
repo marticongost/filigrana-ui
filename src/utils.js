@@ -59,7 +59,7 @@ export function useObjectSet(source, options = null) {
 
     let objectSet = resolvedObjects;
 
-    if (searchQuery) {
+    if (searchQuery || state.searchQuery) {
         const searchChanged = searchQuery != state.searchQuery;
 
         if (searchChanged) {
