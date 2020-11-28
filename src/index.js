@@ -13,4 +13,6 @@ export { Toolbar, ToolbarButton, Action, ActionStatus, ActionAnimation } from ".
 export { NotificationsContainer, useNotifications } from "./notifications";
 export { defineResourceRepository, resourceURL } from "./resources";
 export { SearchBox } from "./SearchBox";
+export { MultilineText } from "./MultilineText";
+export { display } from "./hints";
 export * from './utils';

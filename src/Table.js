@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ParameterSet } from "./utils";
-import { Field } from "@filigrana/schema";
+import { display } from "./hints";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
 import { SVG } from "./SVG";
@@ -172,8 +172,8 @@ export function TableRow(props) {
                 let cellContent;
                 const value = instance[field.name];
 
-                if (field.display) {
-                    const Display = field.display;
+                if (field[display]) {
+                    const Display = field[display];
                     cellContent = (
                         <Display
                             instance={instance}
