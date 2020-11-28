@@ -141,6 +141,7 @@ export function TableHeading(props) {
     return (
         <th
             data-column={field.name}
+            data-type={field.constructor.typeNames}
             {...parameters.remaining}
             {...extraParameters}
             onClick={handleClicked}>
@@ -168,13 +169,6 @@ export function TableRow(props) {
         <tr ref={ref} {...parameters.remaining}>
             {Array.from(schema.fields(), field => {
 
-                const typeNames = [];
-                let fieldClass = field.constructor;
-                while (fieldClass !== Object && fieldClass !== Field && fieldClass.name) {
-                    typeNames.unshift(fieldClass.name);
-                    fieldClass = fieldClass.__proto__;
-                }
-
                 let cellContent;
                 const value = instance[field.name];
 
@@ -195,7 +189,7 @@ export function TableRow(props) {
                     <td
                         key={field.name}
                         data-column={field.name}
-                        data-type={typeNames.join(" ")}>
+                        data-type={field.constructor.typeNames}>
                         {cellContent}
                     </td>
                 );
