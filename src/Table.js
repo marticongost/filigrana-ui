@@ -7,11 +7,22 @@ import { SVG } from "./SVG";
 import { useObjectSet } from "./utils";
 import { resourceURL } from "./resources";
 
+function makeColumns(fields, callback) {
+    let previousGroup = null;
+    let list = [];
+    for (let field of fields) {
+        list.push(callback(field, list.length, field.group != previousGroup));
+        previousGroup = field.group;
+    }
+    return list;
+}
+
 export function Table(props) {
 
     const parameters = new ParameterSet(props, 'flg-Table');
     const model = parameters.pop('model');
     const schema = parameters.pop('schema', null) || model.schema;
+    const HeadingGroupComponent = parameters.pop('groupComponent', TableHeadingsGroup);
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
     const searchQuery = parameters.pop('searchQuery', '');
@@ -53,30 +64,70 @@ export function Table(props) {
     }
     else {
         status = 'loaded';
+        let previousGroup = null;
+
+        function makeHeading(field, columnIndex, isGroupStart) {
+            let sortDirection = 0;
+            if (order) {
+                if (field.name == order) {
+                    sortDirection = 'asc';
+                }
+                else if ('-' + field.name == order) {
+                    sortDirection = 'desc';
+                }
+            }
+            return (
+                <HeadingComponent
+                    key={"field-" + field.name}
+                    field={field}
+                    sortable={sortable}
+                    sortDirection={sortDirection}
+                    onSortingRequested={setOrder}
+                    columnIndex={columnIndex}
+                    isGroupStart={isGroupStart}/>
+            );
+        }
+
+        // Main headings row: fields with no group (with rowspan=2) and group headings
+        // (with colspan=group size)
+        const renderedGroups = new Set();
+        const headingsMainRow = (
+            <tr>
+                {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
+                    if (field.group) {
+                        if (renderedGroups.has(field.group)) {
+                            return null;
+                        }
+                        renderedGroups.add(field.group);
+                        return (
+                            <HeadingGroupComponent
+                                key={"group-" + field.group.name}
+                                group={field.group}
+                                isGroupStart={isGroupStart}/>
+                        );
+                    }
+                    return makeHeading(field, columnIndex, isGroupStart);
+                })}
+            </tr>
+        );
+
+        // Secondary headings row: only fields belonging to a group
+        let headingsSecondaryRow = null;
+        if (schema.grouped) {
+            headingsSecondaryRow = (
+                <tr>
+                    {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
+                        return field.group ? makeHeading(field, columnIndex, isGroupStart) : null;
+                    })}
+                </tr>
+            );
+        }
+
         content = (
             <table>
                 <thead>
-                    <tr>
-                        {Array.from(schema.fields(), field => {
-                            let sortDirection = 0;
-                            if (order) {
-                                if (field.name == order) {
-                                    sortDirection = 'asc';
-                                }
-                                else if ('-' + field.name == order) {
-                                    sortDirection = 'desc';
-                                }
-                            }
-                            return (
-                                <HeadingComponent
-                                    key={field.name}
-                                    field={field}
-                                    sortable={sortable}
-                                    sortDirection={sortDirection}
-                                    onSortingRequested={setOrder}/>
-                            );
-                        })}
-                    </tr>
+                    {headingsMainRow}
+                    {headingsSecondaryRow}
                 </thead>
                 <tbody>
                     {objects.map(instance =>
@@ -101,6 +152,28 @@ export function Table(props) {
     );
 }
 
+export function TableHeadingsGroup(props) {
+
+    const parameters = new ParameterSet(props, 'flg-TableHeadingsGroup');
+    const group = parameters.pop('group');
+    const isGroupStart = parameters.pop('isGroupStart', false);
+
+    if (isGroupStart) {
+        parameters.appendClassName('group-start');
+    }
+
+    return (
+        <th
+            data-group={group.name}
+            colSpan={group.length}
+            {...parameters.remaining}>
+            <div className="header-content">
+                <span className="column-label">{group.label}</span>
+            </div>
+        </th>
+    );
+}
+
 export function TableHeading(props) {
 
     const parameters = new ParameterSet(props, 'flg-TableHeading');
@@ -108,8 +181,10 @@ export function TableHeading(props) {
     const sortable = parameters.pop('sortable', true);
     const sortDirection = parameters.pop('sortDirection', null);
     const onSortingRequested = parameters.pop('onSortingRequested', null);
+    const columnIndex = parameters.pop('columnIndex', null);
+    const isGroupStart = parameters.pop('isGroupStart', false);
 
-    const extraParameters = {};
+    const extraParameters = {'data-index': columnIndex};
 
     if (sortDirection) {
         extraParameters['data-sorted'] = sortDirection;
@@ -117,6 +192,10 @@ export function TableHeading(props) {
 
     if (sortable) {
         parameters.appendClassName('sortable');
+    }
+
+    if (isGroupStart) {
+        parameters.appendClassName('group-start');
     }
 
     let sortDirectionIcon;
@@ -128,6 +207,15 @@ export function TableHeading(props) {
     }
     else {
         sortDirectionIcon = null;
+    }
+
+    // If the column belongs to a group, indicate it; otherwise, if the table is
+    // grouped, span the main and secondary heading rows.
+    if (field.group) {
+        extraParameters["data-group"] = field.group.name;
+    }
+    else if (field.owner.grouped) {
+        extraParameters.rowSpan = 2;
     }
 
     function handleClicked(e) {
@@ -167,10 +255,10 @@ export function TableRow(props) {
 
     return (
         <tr ref={ref} {...parameters.remaining}>
-            {Array.from(schema.fields(), field => {
+            {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
 
                 let cellContent;
-                const value = instance[field.name];
+                const value = instance.getValue(field.name);
 
                 if (field[display]) {
                     const Display = field[display];
@@ -188,7 +276,9 @@ export function TableRow(props) {
                 return (
                     <td
                         key={field.name}
+                        className={isGroupStart ? 'group-start' : null}
                         data-column={field.name}
+                        data-index={columnIndex}
                         data-type={field.constructor.typeNames}>
                         {cellContent}
                     </td>
