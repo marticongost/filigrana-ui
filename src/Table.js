@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { ParameterSet } from "./utils";
-import { display } from "./hints";
+import { display, tooltip } from "./hints";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
 import { SVG } from "./SVG";
+import { Tooltip } from "./Tooltip";
 import { useObjectSet } from "./utils";
 import { resourceURL } from "./resources";
 
@@ -236,6 +237,7 @@ export function TableHeading(props) {
             <div className="header-content">
                 <span className="column-label">{field.label}</span>
                 {sortDirectionIcon}
+                {field[tooltip] ? <Tooltip>{field[tooltip]}</Tooltip> : null}
             </div>
         </th>
     );
