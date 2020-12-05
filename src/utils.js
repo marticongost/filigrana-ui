@@ -179,12 +179,19 @@ export class ParameterSet {
     }
 }
 
+export class ParameterError extends Error {
+
+    constructor(message = null) {
+        super(message || `Error in parameter`);
+    }
+}
+
 const KEY = Symbol('KEY');
 
-class MissingRequiredParameterError extends Error {
+export class MissingRequiredParameterError extends ParameterError {
 
-    constructor(key) {
-        super(`Missing required parameter ${key}`);
+    constructor(key, message = null) {
+        super(key, message || `Missing required parameter ${key}`);
         this[KEY] = key;
     }
 
