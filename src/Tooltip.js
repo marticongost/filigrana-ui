@@ -13,7 +13,6 @@ export function Tooltip(props) {
     if (!listeners.current) {
         listeners.current = {
             mouseenter: (e) => {
-                console.log('SHOW');
                 setVisible(true);
             },
             mouseleave: (e) => setVisible(false)
