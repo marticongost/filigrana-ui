@@ -27,6 +27,7 @@ export function Table(props) {
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
     const searchQuery = parameters.pop('searchQuery', '');
+    const filters = parameters.pop('filters', null);
     const sortable = parameters.pop('sortable', true);
     const initialOrder = parameters.pop('order', null);
     const source = parameters.pop('objects', model.objects);
@@ -47,7 +48,7 @@ export function Table(props) {
 
     const [order, setOrder] = useState(initialOrder);
 
-    const objects = useObjectSet(source, {searchQuery, order});
+    const objects = useObjectSet(source, {filters, searchQuery, order});
     let content;
 
     if (!objects) {

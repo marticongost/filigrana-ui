@@ -20,5 +20,5 @@ schema.Enum.prototype[formControl] = Select;
 // Used to display a tooltip for the field on forms, tables and other UI elements
 export const tooltip = schema.declareHint("display");
 
-export const display = declareHint("display");
-export const tooltip = declareHint("display");
+// Used by filter sets to allow fields to implement custom filtering logic
+export const testFilter = schema.declareHint("testFilter");

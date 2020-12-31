@@ -20,5 +20,6 @@ export { NumberInput } from "./NumberInput";
 export { CheckBox } from "./CheckBox";
 export { Select } from "./Select";
 export { Form, FormField } from "./Form";
-export { display, formControl, tooltip } from "./hints";
+export { display, formControl, tooltip, testFilter } from "./hints";
+export { FilterSet } from "./filters";
 export * from './utils';

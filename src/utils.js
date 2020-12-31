@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { prepareSearch } from "@filigrana/schema";
-import { ObjectStore } from "@filigrana/schema";
+import { prepareSearch, ObjectStore, Model } from "@filigrana/schema";
 
 export function useEventListener(ref, eventName, handler) {
     useEffect(() => {
@@ -14,6 +13,7 @@ export function useEventListener(ref, eventName, handler) {
 export function useObjectSet(source, options = null) {
 
     const searchQuery = options && options.searchQuery || '';
+    const filters = options && options.filters || null;
     const order = options && options.order || null;
     const ref = useRef();
 
@@ -27,6 +27,8 @@ export function useObjectSet(source, options = null) {
     }
 
     const state = ref.current;
+
+    // Await object sets produced by a promise
     const [resolvedObjects, setResolvedObjects] = useState(state.resolvedObjects);
 
     let mounted = true;
@@ -59,6 +61,26 @@ export function useObjectSet(source, options = null) {
 
     let objectSet = resolvedObjects;
 
+    // Apply filters
+    if (filters && !filters.isBlank()) {
+        if (!Model.equal(filters, state.filters)) {
+            state.filterResults = Array.from(filters.filterObjects(objectSet));
+            state.searchResults = null;
+            state.sortedObjects = null;
+        }
+        objectSet = state.filterResults;
+        state.filters = filters;
+    }
+    else {
+        if (state.filters && !state.filters.isBlank()) {
+            state.searchResults = null;
+            state.sortedObjects = null;
+        }
+        state.filters = null;
+        state.filterResults = null;
+    }
+
+    // Apply text search
     if (searchQuery || state.searchQuery) {
         const searchChanged = searchQuery != state.searchQuery;
 
@@ -67,16 +89,17 @@ export function useObjectSet(source, options = null) {
             state.search = prepareSearch(searchQuery);
         }
 
-        if (!state.filteredObjects || searchChanged) {
-            state.filteredObjects = resolvedObjects.filter(
+        if (!state.searchResults || searchChanged) {
+            state.searchResults = objectSet.filter(
                 object => state.search(object.getSearchableText())
             );
             state.sortedObjects = null;
         }
 
-        objectSet = state.filteredObjects;
+        objectSet = state.searchResults;
     }
 
+    // Sort results
     if (order) {
         const orderChanged = order != state.order;
 
