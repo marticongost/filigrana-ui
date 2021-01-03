@@ -12,6 +12,8 @@ export function Dropdown(props) {
     const controller = parameters.pop("controller", null);
     const children = parameters.pop("children", null);
     const onKeyDown = parameters.pop("onKeyDown", null);
+    const xAlignment = parameters.pop("xAlignment", "start");
+    const yAlignment = parameters.pop("yAlignment", "below");
     const [expanded, _setExpanded] = useState(false);
 
     const buttonRef = useRef();
@@ -56,7 +58,11 @@ export function Dropdown(props) {
     }
 
     return (
-        <div data-expanded={expanded} {...parameters.remaining}>
+        <div
+            data-expanded={expanded}
+            data-x-alignment={xAlignment}
+            data-y-alignment={yAlignment}
+            {...parameters.remaining}>
             <button
                 className="flg-Dropdown-button"
                 type="button"
