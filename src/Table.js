@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ParameterSet } from "./utils";
+import { ParameterError, ParameterSet } from "./utils";
 import { display, tooltip } from "./hints";
 import { SelectionContainer, useSelectable } from "./selection";
 import { LoadingMessage } from "./LoadingMessage";
@@ -23,6 +23,9 @@ export function Table(props) {
     const parameters = new ParameterSet(props, 'flg-Table');
     const model = parameters.pop('model');
     const schema = parameters.pop('schema', null) || model.schema;
+    const visibleFields = (
+        parameters.pop("visibleFields", null) || Array.from(schema.fields())
+    );
     const HeadingGroupComponent = parameters.pop('groupComponent', TableHeadingsGroup);
     const HeadingComponent = parameters.pop('headingComponent', TableHeading);
     const RowComponent = parameters.pop('rowComponent', TableRow);
@@ -40,8 +43,21 @@ export function Table(props) {
 
     let rowKey = parameters.pop('rowKey', null);
     if (!rowKey) {
-        for (let field of schema.fields()) {
+        for (let field of visibleFields) {
             rowKey = (instance) => instance.getValue(field.name);
+            break;
+        }
+        if (!rowKey) {
+            throw new ParameterError(
+                "No row key specified, and the visibleFields parameter is empty"
+            );
+        }
+    }
+
+    let tableHasGroups = false;
+    for (let field of visibleFields) {
+        if (field.group) {
+            tableHasGroups = true;
             break;
         }
     }
@@ -66,7 +82,6 @@ export function Table(props) {
     }
     else {
         status = 'loaded';
-        let previousGroup = null;
 
         function makeHeading(field, columnIndex, isGroupStart) {
             let sortDirection = 0;
@@ -86,25 +101,35 @@ export function Table(props) {
                     sortDirection={sortDirection}
                     onSortingRequested={setOrder}
                     columnIndex={columnIndex}
+                    tableHasGroups={tableHasGroups}
                     isGroupStart={isGroupStart}/>
             );
         }
 
         // Main headings row: fields with no group (with rowspan=2) and group headings
-        // (with colspan=group size)
+        // (with colSpan=group size)
         const renderedGroups = new Set();
         const headingsMainRow = (
             <tr>
-                {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
+                {makeColumns(visibleFields, (field, columnIndex, isGroupStart) => {
                     if (field.group) {
                         if (renderedGroups.has(field.group)) {
                             return null;
                         }
                         renderedGroups.add(field.group);
+
+                        let colSpan = 0;
+                        for (let groupField of field.group.fields()) {
+                            if (visibleFields.includes(groupField)) {
+                                colSpan++;
+                            }
+                        }
+
                         return (
                             <HeadingGroupComponent
                                 key={"group-" + field.group.name}
                                 group={field.group}
+                                colSpan={colSpan}
                                 isGroupStart={isGroupStart}/>
                         );
                     }
@@ -115,10 +140,10 @@ export function Table(props) {
 
         // Secondary headings row: only fields belonging to a group
         let headingsSecondaryRow = null;
-        if (schema.grouped) {
+        if (renderedGroups.size) {
             headingsSecondaryRow = (
                 <tr>
-                    {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
+                    {makeColumns(visibleFields, (field, columnIndex, isGroupStart) => {
                         return field.group ? makeHeading(field, columnIndex, isGroupStart) : null;
                     })}
                 </tr>
@@ -136,6 +161,7 @@ export function Table(props) {
                         <RowComponent
                             key={rowKey(instance)}
                             schema={schema}
+                            visibleFields={visibleFields}
                             instance={instance} />
                     )}
                 </tbody>
@@ -158,6 +184,7 @@ export function TableHeadingsGroup(props) {
 
     const parameters = new ParameterSet(props, 'flg-TableHeadingsGroup');
     const group = parameters.pop('group');
+    const colSpan = parameters.pop("colSpan");
     const isGroupStart = parameters.pop('isGroupStart', false);
 
     if (isGroupStart) {
@@ -167,7 +194,7 @@ export function TableHeadingsGroup(props) {
     return (
         <th
             data-group={group.name}
-            colSpan={group.length}
+            colSpan={colSpan}
             {...parameters.remaining}>
             <div className="header-content">
                 <span className="column-label">{group.label}</span>
@@ -184,6 +211,7 @@ export function TableHeading(props) {
     const sortDirection = parameters.pop('sortDirection', null);
     const onSortingRequested = parameters.pop('onSortingRequested', null);
     const columnIndex = parameters.pop('columnIndex', null);
+    const tableHasGroups = parameters.pop("tableHasGroups", false);
     const isGroupStart = parameters.pop('isGroupStart', false);
 
     const extraParameters = {'data-index': columnIndex};
@@ -216,7 +244,7 @@ export function TableHeading(props) {
     if (field.group) {
         extraParameters["data-group"] = field.group.name;
     }
-    else if (field.owner.grouped) {
+    else if (tableHasGroups) {
         extraParameters.rowSpan = 2;
     }
 
@@ -248,6 +276,9 @@ export function TableRow(props) {
 
     const parameters = new ParameterSet(props, 'flg-TableRow');
     const schema = parameters.pop('schema');
+    const visibleFields = (
+        parameters.pop("visibleFields", null) || Array.from(schema.fields())
+    );
     const instance = parameters.pop('instance');
 
     const [ref, isSelected] = useSelectable(instance);
@@ -258,7 +289,7 @@ export function TableRow(props) {
 
     return (
         <tr ref={ref} {...parameters.remaining}>
-            {makeColumns(schema.fields(), (field, columnIndex, isGroupStart) => {
+            {makeColumns(visibleFields, (field, columnIndex, isGroupStart) => {
 
                 let cellContent;
                 const value = instance.getValue(field.name);
