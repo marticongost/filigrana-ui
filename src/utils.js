@@ -10,6 +10,15 @@ export function useEventListener(ref, eventName, handler) {
     }, []);
 }
 
+export function useWindowEventListener(eventName, handler) {
+    useEffect(() => {
+        window.addEventListener(eventName, handler);
+        return () => {
+            window.removeEventListener(eventName, handler);
+        }
+    }, []);
+}
+
 export function useObjectSet(source, options = null) {
 
     const searchQuery = options && options.searchQuery || '';
