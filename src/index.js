@@ -21,6 +21,6 @@ export { CheckBox } from "./CheckBox";
 export { Select } from "./Select";
 export { Form, FormField } from "./Form";
 export { Button } from "./Button";
-export { display, formControl, tooltip, testFilter } from "./hints";
+export { display, formControl, formChoiceControl, tooltip, testFilter } from "./hints";
 export { FilterSet } from "./filters";
 export * from './utils';

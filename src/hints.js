@@ -17,6 +17,13 @@ schema.Number.prototype[formControl] = NumberInput;
 schema.Boolean.prototype[formControl] = CheckBox;
 schema.Enum.prototype[formControl] = Select;
 
+// Used by forms to determine the UI component that should be used to edit the field if
+// it has a closed set of values (f. eg. choose between a dropdown selector and a list
+// of radios)
+export const formChoiceControl = schema.declareHint("formChoiceControl");
+
+schema.Field.prototype[formChoiceControl] = Select;
+
 // Used to display a tooltip for the field on forms, tables and other UI elements
 export const tooltip = schema.declareHint("display");
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { ParameterSet } from "./utils";
-import { formControl } from "./hints";
+import { formControl, formChoiceControl } from "./hints";
 import { Tooltip } from "./Tooltip";
 import { tooltip } from "./hints";
 
@@ -48,7 +48,9 @@ export function FormField(props) {
     const field = parameters.pop("field");
     const value = object.getValue(field.name);
     const onChange = parameters.pop("onChange", null);
-    const FormControlComponent = field.requireHint(formControl);
+    const FormControlComponent = (
+        field.requireHint(field.choices ? formChoiceControl : formControl)
+    );
 
     const idRef = useRef(null);
 
