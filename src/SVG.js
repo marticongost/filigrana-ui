@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { ParameterSet } from "./utils";
 
 export function SVG(props) {
 
-    const {src, ...attr} = props;
+    const parameters = new ParameterSet(props, "flg-SVG");
+    const src = parameters.pop("src");
     const [svgContent, setSVGContent] = useState(null);
     let mounted;
 
@@ -28,5 +30,5 @@ export function SVG(props) {
         svg = {__html: svgContent};
     }
 
-    return <div className="flg-SVG" {...attr} dangerouslySetInnerHTML={svg}/>;
+    return <div {...parameters.remaining} dangerouslySetInnerHTML={svg}/>;
 }
