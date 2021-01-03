@@ -19,6 +19,7 @@ export { Input } from "./Input";
 export { TextInput } from "./TextInput";
 export { NumberInput } from "./NumberInput";
 export { CheckBox } from "./CheckBox";
+export { CheckList } from "./CheckList";
 export { Select } from "./Select";
 export { Form, FormField } from "./Form";
 export { Button } from "./Button";
