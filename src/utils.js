@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from "react";
 import { prepareSearch, ObjectStore, Model } from "@filigrana/schema";
 
+const uniqueIdPrefixCounter = {};
+
+export function useUniqueId(prefix) {
+    const ref = useRef();
+    if (!ref.current) {
+        const count = uniqueIdPrefixCounter[prefix] || 0;
+        uniqueIdPrefixCounter[prefix] = count + 1;
+        ref.current = prefix + count;
+    }
+    return ref.current;
+}
+
 export function useEventListener(ref, eventName, handler) {
     useEffect(() => {
         ref.current.addEventListener(eventName, handler);
