@@ -223,7 +223,7 @@ const KEY = Symbol('KEY');
 export class MissingRequiredParameterError extends ParameterError {
 
     constructor(key, message = null) {
-        super(key, message || `Missing required parameter ${key}`);
+        super(message || `Missing required parameter ${key}`);
         this[KEY] = key;
     }
 
