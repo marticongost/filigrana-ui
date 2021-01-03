@@ -63,7 +63,7 @@ export function FormField(props) {
             {...parameters.remaining}
             data-field={field.name}
             data-type={field.constructor.typeNames}>
-            <label htmlFor={idRef.current}>
+            <label className="flg-FormField-label" htmlFor={idRef.current}>
                 {field.label}
                 {field[tooltip] ? <Tooltip>{field[tooltip]}</Tooltip> : null}
             </label>
