@@ -60,8 +60,8 @@ export function ToolbarButton(props) {
             onClick={handleClick}
             {...attr}
             {...parameters.remaining}>
-            <SVG src={action.icon}/>
-            <span>{action.label}</span>
+            <SVG className="flg-ToolbarButton-icon" src={action.icon}/>
+            <span className="flg-ToolbarButton-label">{action.label}</span>
         </button>
     );
 }
