@@ -36,7 +36,7 @@ export function Select(props) {
     }
 
     if (field && !field.required) {
-        possibleValues.unshift(null);
+        possibleValues = [null, ...possibleValues];
     }
 
     if (!ItemComponent) {
