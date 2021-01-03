@@ -12,6 +12,7 @@ export { SVG } from "./SVG";
 export { Toolbar, ToolbarButton, Action, ActionStatus, ActionAnimation } from "./Toolbar";
 export { NotificationsContainer, useNotifications } from "./notifications";
 export { defineResourceRepository, resourceURL } from "./resources";
+export { Dropdown } from "./Dropdown";
 export { SearchBox } from "./SearchBox";
 export { MultilineText } from "./MultilineText";
 export { Input } from "./Input";
